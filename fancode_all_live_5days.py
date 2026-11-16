@@ -14,7 +14,6 @@ SPORT_SCHEDULES = [
     ("Badminton", "https://www.fancode.com/badminton/schedule"),
 ]
 
-# Top navbar ke category slugs jo match nahi hote
 NAV_JUNK_SLUGS = {
     "formula1", "formula-1", "lawn-tennis", "tennis", "motogp",
     "golf", "racing", "badminton", "football", "cricket", "kabaddi", "hockey"
@@ -24,12 +23,29 @@ def slugify(text: str) -> str:
     return re.sub(r'[^a-zA-Z0-9]+', '-', str(text).lower()).strip('-')
 
 def extract_real_match_id(url: str) -> int:
-    # Hamesha /matches/ ke baad wale slug ke aakhri digits lo (Tour ID ignore karo)
     m = re.search(r'/matches/[^/]+?-(\d+)(?:/|$)', str(url))
     if m:
         return int(m.group(1))
     m2 = re.search(r'-(\d{5,8})(?:/|$)', str(url))
     return int(m2.group(1)) if m2 else 0
+
+def parse_fancode_human_date(raw_str: str, ist_zone):
+    """
+    Converts '16 Nov, 2026, 10:30 PM @ Omni Barton Creek...' -> datetime object in IST
+    """
+    if not raw_str:
+        return None
+    date_part = raw_str.split("@")[0].strip()
+    # Pattern: 16 Nov, 2026, 10:30 PM
+    m = re.search(r'(\d{1,2}\s+[A-Za-z]{3},\s+\d{4}),?\s+(\d{1,2}:\d{2}\s*[AP]M)', date_part, re.I)
+    if m:
+        clean_dt_str = f"{m.group(1)} {m.group(2).upper()}"
+        try:
+            dt_naive = datetime.strptime(clean_dt_str, "%d %b, %Y %I:%M %p")
+            return dt_naive.replace(tzinfo=ist_zone)
+        except Exception:
+            pass
+    return None
 
 async def collect_schedule_links(page, sport_name: str, schedule_url: str):
     print(f"🔍 Scanning [{sport_name}] Schedule: {schedule_url}")
@@ -50,7 +66,7 @@ async def collect_schedule_links(page, sport_name: str, schedule_url: str):
         let sportSlug = args.sportSlug;
         let sportName = args.sportName;
 
-        // 1. Direct DOM links (Sirf /tour/.../matches/... wale valid links)
+        // 1. Direct DOM links
         document.querySelectorAll('a[href*="/tour/"][href*="/matches/"]').forEach(a => {
             let href = a.href ? a.href.split('?')[0] : '';
             if (!href) return;
@@ -58,6 +74,9 @@ async def collect_schedule_links(page, sport_name: str, schedule_url: str):
             let card = a.closest('div[role="article"], li, div') || a;
             let text = (card.innerText || '').toUpperCase();
             if (text.includes('COMPLETED') || text.includes('BEAT ') || text.includes('WON BY') || text.includes('HIGHLIGHTS')) return;
+
+            // "WATCH LIVE IN" upcoming hota hai, sirf exact "WATCH LIVE" live hota hai
+            let isLive = text.includes('WATCH LIVE') && !text.includes('WATCH LIVE IN') && !text.includes('WATCH LIVE AT');
 
             let baseUrl = href.replace(/\/(live-match-info|scorecard|commentary|squad|stats)\/?$/, '');
             let fullUrl = baseUrl + '/live-match-info';
@@ -67,7 +86,7 @@ async def collect_schedule_links(page, sport_name: str, schedule_url: str):
                     sport_name: sportName,
                     match_url: fullUrl,
                     base_url: baseUrl,
-                    is_live_hint: text.includes('WATCH LIVE')
+                    is_live_hint: isLive
                 });
             }
         });
@@ -83,7 +102,6 @@ async def collect_schedule_links(page, sport_name: str, schedule_url: str):
                 let tourName = node.tourName || tourObj.name || node.seriesName || '';
                 let status = String(node.status || '').toUpperCase();
 
-                // Valid match object tabhi hoga jab tourId ya teams ya startTime maujood ho
                 let hasMatchProps = Boolean(tourId || tourObj.id || (Array.isArray(node.teams) && node.teams.length >= 2) || node.startTime);
 
                 if (mid && String(mid).match(/^\d{5,8}$/) && hasMatchProps && (node.teams || node.slug || node.name)) {
@@ -132,7 +150,6 @@ async def collect_schedule_links(page, sport_name: str, schedule_url: str):
         return results;
     }""", {"sportSlug": slugify(sport_name), "sportName": sport_name})
 
-    # Top navbar ke category slugs filter karna
     clean_items = []
     for item in raw_items:
         slug_part = item["base_url"].split("/matches/")[-1]
@@ -151,13 +168,16 @@ async def scrape_event_detail(page, link_info: dict, ist_zone, now_ist, cutoff_t
 
     print(f"➡️ Scraping [{sport_name}]: {match_url}")
     await page.goto(match_url, wait_until="domcontentloaded", timeout=30000)
-    await asyncio.sleep(2.2)
+    await asyncio.sleep(1.5)
+
+    # Neeche scroll karo taaki "MATCH TIME AND VENUE" aur "TOSS" render ho jaye
+    await page.evaluate("window.scrollBy(0, 600);")
+    await asyncio.sleep(1.0)
 
     final_page_url = page.url.split('?')[0]
     if "/matches/" in final_page_url:
         base_url = re.sub(r'/(live-match-info|scorecard|commentary|squad|stats)/?$', '', final_page_url.rstrip('/'))
 
-    # Asli Match ID (URL ke aakhri /matches/...-<id> se)
     mid_int = extract_real_match_id(base_url)
 
     detail = await page.evaluate(r"""(midStr) => {
@@ -172,12 +192,13 @@ async def scrape_event_detail(page, link_info: dict, ist_zone, now_ist, cutoff_t
             venue: '',
             time_venue_raw: '',
             iso_start: '',
+            countdown_sec: 0,
             is_live: false,
             is_completed: false,
             scores: []
         };
 
-        // 1. Official Match-Specific Banner Poster (Match ID wala poster priority par)
+        // 1. Official Banner Poster
         let imgs = Array.from(document.querySelectorAll('img'));
         let fallbackBanner = '';
         for (let img of imgs) {
@@ -187,7 +208,7 @@ async def scrape_event_detail(page, link_info: dict, ist_zone, now_ist, cutoff_t
                     info.poster = s;
                     break;
                 }
-                if (!fallbackBanner && (s.includes('_fc-Web') || s.includes('_fc-web') || img.width > 250)) {
+                if (!fallbackBanner && (s.includes('_fc-Web') || s.includes('_fc-web') || s.includes('WebTVBG') || img.width > 250)) {
                     fallbackBanner = s;
                 }
             }
@@ -196,18 +217,26 @@ async def scrape_event_detail(page, link_info: dict, ist_zone, now_ist, cutoff_t
             info.poster = fallbackBanner;
         }
 
-        // 2. Visible Page Text (Header ke "Live Now" button ko ignore karke sirf match area check karna)
+        // 2. Visible Page Text Parsing
         let bodyText = document.body.innerText || '';
         let upperBody = bodyText.toUpperCase();
         if (upperBody.includes('MATCH COMPLETED') || upperBody.includes('WON BY') || upperBody.includes('SESSION ENDED')) {
             info.is_completed = true;
         }
 
+        // Countdown timer check e.g. "02h : 28m : 53s"
+        let cdMatch = bodyText.match(/(\d{1,2})h\s*:\s*(\d{1,2})m\s*:\s*(\d{1,2})s/i);
+        if (cdMatch) {
+            info.countdown_sec = (parseInt(cdMatch[1]) * 3600) + (parseInt(cdMatch[2]) * 60) + parseInt(cdMatch[3]);
+            info.is_live = false;
+        }
+
         let lines = bodyText.split('\n').map(l => l.trim()).filter(Boolean);
         for (let i = 0; i < lines.length; i++) {
             let line = lines[i];
 
-            if (line === 'Watch Live' || line === 'WATCH LIVE') {
+            // Exact "Watch Live" (not "WATCH LIVE IN")
+            if ((line === 'Watch Live' || line === 'WATCH LIVE') && info.countdown_sec === 0) {
                 info.is_live = true;
             }
             if ((line === 'vs' || line === 'VS') && i > 0 && i + 1 < lines.length) {
@@ -221,9 +250,14 @@ async def scrape_event_detail(page, link_info: dict, ist_zone, now_ist, cutoff_t
                 info.toss = lines[i + 1];
             }
             if (line === 'MATCH TIME AND VENUE' && lines[i + 1]) {
-                info.time_venue_raw = lines[i + 1];
-                if (lines[i + 1].includes('@')) {
-                    info.venue = lines[i + 1].split('@')[1].trim();
+                // Kabhi-kabhi venue next 2 lines mein wrap hota hai
+                let combinedVenue = lines[i + 1];
+                if (lines[i + 2] && !['OFFICIALS', 'TOSS', 'SQUAD', 'MORE LIVE ACTION'].includes(lines[i + 2].toUpperCase())) {
+                    combinedVenue += ' ' + lines[i + 2];
+                }
+                info.time_venue_raw = combinedVenue;
+                if (combinedVenue.includes('@')) {
+                    info.venue = combinedVenue.split('@')[1].trim();
                 }
             }
             if (line.includes('trail by') || line.includes('lead by') || line.includes('need ')) {
@@ -274,7 +308,7 @@ async def scrape_event_detail(page, link_info: dict, ist_zone, now_ist, cutoff_t
     if not event_name:
         event_name = f"{sport_name} Series, 2026"
 
-    # Teams ya Non-Team Session (Formula 1 / MotoGP / Golf / Badminton)
+    # Teams ya Non-Team Session
     t1 = str(detail.get("team_1") or "").strip()
     t2 = str(detail.get("team_2") or "").strip()
 
@@ -290,25 +324,43 @@ async def scrape_event_detail(page, link_info: dict, ist_zone, now_ist, cutoff_t
             t1 = session_title
             t2 = event_name
 
-    # StartTime aur LIVE vs UPCOMING check
-    is_live = bool(detail.get("is_live") or link_info.get("is_live_hint"))
-    formatted_start = now_ist.strftime("%I:%M:%S %p %d-%m-%Y")
-    iso_start = str(detail.get("iso_start") or link_info.get("iso_start") or "").strip()
+    # Exact StartTime Resolution (Priority: 1. MATCH TIME AND VENUE, 2. ISO startTime, 3. Countdown timer)
+    is_live = bool(detail.get("is_live"))
+    parsed_dt = None
 
-    if iso_start:
-        try:
-            dt = datetime.fromisoformat(iso_start.replace("Z", "+00:00")).astimezone(ist_zone)
-            if not is_live and dt < (now_ist - timedelta(hours=6)):
-                return None
-            if dt > cutoff_time:
-                return None
-            if dt > now_ist:
-                is_live = False  # Future time wale match hamesha UPCOMING rahenge
-            formatted_start = dt.strftime("%I:%M:%S %p %d-%m-%Y")
-        except Exception:
-            formatted_start = detail.get("time_venue_raw") or formatted_start
-    elif detail.get("time_venue_raw"):
-        formatted_start = str(detail["time_venue_raw"]).split("@")[0].strip()
+    # Priority 1: Visible "16 Nov, 2026, 10:30 PM @ ..."
+    if detail.get("time_venue_raw"):
+        parsed_dt = parse_fancode_human_date(detail["time_venue_raw"], ist_zone)
+
+    # Priority 2: ISO timestamp from state
+    if not parsed_dt:
+        iso_start = str(detail.get("iso_start") or link_info.get("iso_start") or "").strip()
+        if iso_start:
+            try:
+                parsed_dt = datetime.fromisoformat(iso_start.replace("Z", "+00:00")).astimezone(ist_zone)
+            except Exception:
+                pass
+
+    # Priority 3: Countdown timer ("02h : 28m : 53s")
+    if not parsed_dt and detail.get("countdown_sec", 0) > 0:
+        parsed_dt = now_ist + timedelta(seconds=int(detail["countdown_sec"]))
+        # Nearest 5-minute mark par round karna (e.g. 10:29:54 -> 10:30:00)
+        rem = parsed_dt.minute % 5
+        if rem >= 3:
+            parsed_dt = (parsed_dt + timedelta(minutes=(5 - rem))).replace(second=0)
+        elif rem <= 2:
+            parsed_dt = (parsed_dt - timedelta(minutes=rem)).replace(second=0)
+
+    if parsed_dt:
+        if not is_live and parsed_dt < (now_ist - timedelta(hours=6)):
+            return None
+        if parsed_dt > cutoff_time:
+            return None
+        if parsed_dt > now_ist:
+            is_live = False
+        formatted_start = parsed_dt.strftime("%I:%M:%S %p %d-%m-%Y")
+    else:
+        formatted_start = now_ist.strftime("%I:%M:%S %p %d-%m-%Y")
 
     poster = str(detail.get("poster") or "").strip()
     if not poster:
@@ -380,7 +432,6 @@ async def main():
                 sport_items = await collect_schedule_links(page, sport_name, sched_url)
                 all_collected.extend(sport_items)
 
-            # Deduplicate strictly by REAL match_id (e.g., 139984, 4250963)
             unique_by_id = {}
             for item in all_collected:
                 real_mid = extract_real_match_id(item["base_url"])
@@ -420,4 +471,4 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-                
+    
