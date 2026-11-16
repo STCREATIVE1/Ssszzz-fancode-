@@ -1,7 +1,7 @@
 {
-    "name": "Fancode Live & 5-Days Schedule Data",
+    "name": "Fancode All-Sports Live & 5-Days Schedule",
     "telegram": "https://t.me/+rQTz5VL8CRpjNTZl",
-    "last update time": "07:17:09 PM 16-11-2026",
+    "last update time": "07:32:21 PM 16-11-2026",
     "matches": [
         {
             "event_category": "Cricket",
@@ -13,8 +13,8 @@
             "team_1": "South Africa",
             "team_2": "Bangladesh",
             "status": "LIVE",
-            "match_status_text": "Day 2: South Africa trail by 218",
-            "startTime": "07:17:09 PM 16-11-2026",
+            "match_status_text": "Day 2: South Africa trail by 206",
+            "startTime": "07:32:21 PM 16-11-2026",
             "live_scorecard": [
                 {
                     "team": "BAN",
@@ -22,7 +22,7 @@
                 },
                 {
                     "team": "SA",
-                    "score": "182/1"
+                    "score": "194/1"
                 }
             ],
             "match_info": {
@@ -48,7 +48,7 @@
             "team_2": "Europe",
             "status": "LIVE",
             "match_status_text": "",
-            "startTime": "07:17:09 PM 16-11-2026",
+            "startTime": "07:32:21 PM 16-11-2026",
             "live_scorecard": [],
             "match_info": {
                 "toss": "",
@@ -73,7 +73,7 @@
             "team_2": "Tiafoe",
             "status": "LIVE",
             "match_status_text": "",
-            "startTime": "07:17:09 PM 16-11-2026",
+            "startTime": "07:32:21 PM 16-11-2026",
             "live_scorecard": [],
             "match_info": {
                 "toss": "",
@@ -85,6 +85,281 @@
                 "full_scorecard": "https://www.fancode.com/alcaraz-vs-tiafoe/tour/nitto-atp-finals-2026-20013991/matches/alcaraz-vs-tiafoe-4250726/scorecard",
                 "live_commentary": "https://www.fancode.com/alcaraz-vs-tiafoe/tour/nitto-atp-finals-2026-20013991/matches/alcaraz-vs-tiafoe-4250726/commentary",
                 "squad": "https://www.fancode.com/alcaraz-vs-tiafoe/tour/nitto-atp-finals-2026-20013991/matches/alcaraz-vs-tiafoe-4250726/squad"
+            }
+        },
+        {
+            "event_category": "Cricket",
+            "match_id": 17100510,
+            "title": "Formula1 (Cricket Series, 2026)",
+            "match_name": "Formula1",
+            "event_name": "Cricket Series, 2026",
+            "src": "https://images.fancode.com/skillup-uploads/cms-media/AFG-vs-ZIM.png",
+            "team_1": "Formula1",
+            "team_2": "",
+            "status": "LIVE",
+            "match_status_text": "",
+            "startTime": "07:32:21 PM 16-11-2026",
+            "live_scorecard": [],
+            "match_info": {
+                "toss": "",
+                "venue": "",
+                "time_and_venue": ""
+            },
+            "links": {
+                "match_url": "https://www.fancode.com/cricket/matches/formula1-17100510/live-match-info",
+                "full_scorecard": "https://www.fancode.com/cricket/matches/formula1-17100510/scorecard",
+                "live_commentary": "https://www.fancode.com/cricket/matches/formula1-17100510/commentary",
+                "squad": "https://www.fancode.com/cricket/matches/formula1-17100510/squad"
+            }
+        },
+        {
+            "event_category": "Cricket",
+            "match_id": 19271020,
+            "title": "Lawn Tennis (Cricket Series, 2026)",
+            "match_name": "Lawn Tennis",
+            "event_name": "Cricket Series, 2026",
+            "src": "https://images.fancode.com/skillup-uploads/cms-media/AFG-vs-ZIM.png",
+            "team_1": "Lawn Tennis",
+            "team_2": "",
+            "status": "LIVE",
+            "match_status_text": "",
+            "startTime": "07:32:21 PM 16-11-2026",
+            "live_scorecard": [],
+            "match_info": {
+                "toss": "",
+                "venue": "",
+                "time_and_venue": ""
+            },
+            "links": {
+                "match_url": "https://www.fancode.com/cricket/matches/lawn-tennis-19271020/live-match-info",
+                "full_scorecard": "https://www.fancode.com/cricket/matches/lawn-tennis-19271020/scorecard",
+                "live_commentary": "https://www.fancode.com/cricket/matches/lawn-tennis-19271020/commentary",
+                "squad": "https://www.fancode.com/cricket/matches/lawn-tennis-19271020/squad"
+            }
+        },
+        {
+            "event_category": "Cricket",
+            "match_id": 18062378,
+            "title": "Motogp (Cricket Series, 2026)",
+            "match_name": "Motogp",
+            "event_name": "Cricket Series, 2026",
+            "src": "https://images.fancode.com/skillup-uploads/cms-media/AFG-vs-ZIM.png",
+            "team_1": "Motogp",
+            "team_2": "",
+            "status": "LIVE",
+            "match_status_text": "",
+            "startTime": "07:32:21 PM 16-11-2026",
+            "live_scorecard": [],
+            "match_info": {
+                "toss": "",
+                "venue": "",
+                "time_and_venue": ""
+            },
+            "links": {
+                "match_url": "https://www.fancode.com/cricket/matches/motogp-18062378/live-match-info",
+                "full_scorecard": "https://www.fancode.com/cricket/matches/motogp-18062378/scorecard",
+                "live_commentary": "https://www.fancode.com/cricket/matches/motogp-18062378/commentary",
+                "squad": "https://www.fancode.com/cricket/matches/motogp-18062378/squad"
+            }
+        },
+        {
+            "event_category": "Cricket",
+            "match_id": 15737194,
+            "title": "Golf (Cricket Series, 2026)",
+            "match_name": "Golf",
+            "event_name": "Cricket Series, 2026",
+            "src": "https://images.fancode.com/skillup-uploads/cms-media/AFG-vs-ZIM.png",
+            "team_1": "Golf",
+            "team_2": "",
+            "status": "LIVE",
+            "match_status_text": "",
+            "startTime": "07:32:21 PM 16-11-2026",
+            "live_scorecard": [],
+            "match_info": {
+                "toss": "",
+                "venue": "",
+                "time_and_venue": ""
+            },
+            "links": {
+                "match_url": "https://www.fancode.com/cricket/matches/golf-15737194/live-match-info",
+                "full_scorecard": "https://www.fancode.com/cricket/matches/golf-15737194/scorecard",
+                "live_commentary": "https://www.fancode.com/cricket/matches/golf-15737194/commentary",
+                "squad": "https://www.fancode.com/cricket/matches/golf-15737194/squad"
+            }
+        },
+        {
+            "event_category": "Cricket",
+            "match_id": 17113280,
+            "title": "Racing (Cricket Series, 2026)",
+            "match_name": "Racing",
+            "event_name": "Cricket Series, 2026",
+            "src": "https://images.fancode.com/skillup-uploads/cms-media/AFG-vs-ZIM.png",
+            "team_1": "Racing",
+            "team_2": "",
+            "status": "LIVE",
+            "match_status_text": "",
+            "startTime": "07:32:21 PM 16-11-2026",
+            "live_scorecard": [],
+            "match_info": {
+                "toss": "",
+                "venue": "",
+                "time_and_venue": ""
+            },
+            "links": {
+                "match_url": "https://www.fancode.com/cricket/matches/racing-17113280/live-match-info",
+                "full_scorecard": "https://www.fancode.com/cricket/matches/racing-17113280/scorecard",
+                "live_commentary": "https://www.fancode.com/cricket/matches/racing-17113280/commentary",
+                "squad": "https://www.fancode.com/cricket/matches/racing-17113280/squad"
+            }
+        },
+        {
+            "event_category": "Cricket",
+            "match_id": 18138948,
+            "title": "Badminton (Cricket Series, 2026)",
+            "match_name": "Badminton",
+            "event_name": "Cricket Series, 2026",
+            "src": "https://images.fancode.com/skillup-uploads/cms-media/AFG-vs-ZIM.png",
+            "team_1": "Badminton",
+            "team_2": "",
+            "status": "LIVE",
+            "match_status_text": "",
+            "startTime": "07:32:21 PM 16-11-2026",
+            "live_scorecard": [],
+            "match_info": {
+                "toss": "",
+                "venue": "",
+                "time_and_venue": ""
+            },
+            "links": {
+                "match_url": "https://www.fancode.com/cricket/matches/badminton-18138948/live-match-info",
+                "full_scorecard": "https://www.fancode.com/cricket/matches/badminton-18138948/scorecard",
+                "live_commentary": "https://www.fancode.com/cricket/matches/badminton-18138948/commentary",
+                "squad": "https://www.fancode.com/cricket/matches/badminton-18138948/squad"
+            }
+        },
+        {
+            "event_category": "Motorsport",
+            "match_id": 19295055,
+            "title": "Practice 2 (F1 Heineken Las Vegas Grand Prix 2026)",
+            "match_name": "Practice 2",
+            "event_name": "F1 Heineken Las Vegas Grand Prix 2026",
+            "src": "https://images.fancode.com/skillup-uploads/cms-media/AFG-vs-ZIM.png",
+            "team_1": "Practice 2",
+            "team_2": "",
+            "status": "LIVE",
+            "match_status_text": "",
+            "startTime": "07:32:21 PM 16-11-2026",
+            "live_scorecard": [],
+            "match_info": {
+                "toss": "",
+                "venue": "",
+                "time_and_venue": ""
+            },
+            "links": {
+                "match_url": "https://www.fancode.com/formula1/tour/f1-heineken-las-vegas-grand-prix-2026-19295055/matches/practice-2-139518/live-match-info",
+                "full_scorecard": "https://www.fancode.com/formula1/tour/f1-heineken-las-vegas-grand-prix-2026-19295055/matches/practice-2-139518/scorecard",
+                "live_commentary": "https://www.fancode.com/formula1/tour/f1-heineken-las-vegas-grand-prix-2026-19295055/matches/practice-2-139518/commentary",
+                "squad": "https://www.fancode.com/formula1/tour/f1-heineken-las-vegas-grand-prix-2026-19295055/matches/practice-2-139518/squad"
+            }
+        },
+        {
+            "event_category": "Motorsport",
+            "match_id": 19324275,
+            "title": "Day 1 (Portugal Gp)",
+            "match_name": "Day 1",
+            "event_name": "Portugal Gp",
+            "src": "https://images.fancode.com/skillup-uploads/cms-media/AFG-vs-ZIM.png",
+            "team_1": "Day 1",
+            "team_2": "",
+            "status": "LIVE",
+            "match_status_text": "",
+            "startTime": "07:32:21 PM 16-11-2026",
+            "live_scorecard": [],
+            "match_info": {
+                "toss": "",
+                "venue": "",
+                "time_and_venue": ""
+            },
+            "links": {
+                "match_url": "https://www.fancode.com/motogp/tour/portugal-gp-19324275/matches/day-1-139984/live-match-info",
+                "full_scorecard": "https://www.fancode.com/motogp/tour/portugal-gp-19324275/matches/day-1-139984/scorecard",
+                "live_commentary": "https://www.fancode.com/motogp/tour/portugal-gp-19324275/matches/day-1-139984/commentary",
+                "squad": "https://www.fancode.com/motogp/tour/portugal-gp-19324275/matches/day-1-139984/squad"
+            }
+        },
+        {
+            "event_category": "Golf",
+            "match_id": 20013990,
+            "title": "World Feed Day 5 (Austin Championship 2026)",
+            "match_name": "World Feed Day 5",
+            "event_name": "Austin Championship 2026",
+            "src": "https://images.fancode.com/skillup-uploads/cms-media/AFG-vs-ZIM.png",
+            "team_1": "World Feed Day 5",
+            "team_2": "",
+            "status": "LIVE",
+            "match_status_text": "",
+            "startTime": "07:32:21 PM 16-11-2026",
+            "live_scorecard": [],
+            "match_info": {
+                "toss": "",
+                "venue": "",
+                "time_and_venue": ""
+            },
+            "links": {
+                "match_url": "https://www.fancode.com/golf/tour/austin-championship-2026-20013990/matches/world-feed-day-5-4250963/live-match-info",
+                "full_scorecard": "https://www.fancode.com/golf/tour/austin-championship-2026-20013990/matches/world-feed-day-5-4250963/scorecard",
+                "live_commentary": "https://www.fancode.com/golf/tour/austin-championship-2026-20013990/matches/world-feed-day-5-4250963/commentary",
+                "squad": "https://www.fancode.com/golf/tour/austin-championship-2026-20013990/matches/world-feed-day-5-4250963/squad"
+            }
+        },
+        {
+            "event_category": "Golf",
+            "match_id": 20000865,
+            "title": "Bos vs Det (Wtgl 2026)",
+            "match_name": "Bos vs Det",
+            "event_name": "Wtgl 2026",
+            "src": "https://images.fancode.com/skillup-uploads/cms-media/AFG-vs-ZIM.png",
+            "team_1": "Bos",
+            "team_2": "Det",
+            "status": "LIVE",
+            "match_status_text": "",
+            "startTime": "07:32:21 PM 16-11-2026",
+            "live_scorecard": [],
+            "match_info": {
+                "toss": "",
+                "venue": "",
+                "time_and_venue": ""
+            },
+            "links": {
+                "match_url": "https://www.fancode.com/golf/tour/wtgl-2026-20000865/matches/bos-vs-det-4250614/live-match-info",
+                "full_scorecard": "https://www.fancode.com/golf/tour/wtgl-2026-20000865/matches/bos-vs-det-4250614/scorecard",
+                "live_commentary": "https://www.fancode.com/golf/tour/wtgl-2026-20000865/matches/bos-vs-det-4250614/commentary",
+                "squad": "https://www.fancode.com/golf/tour/wtgl-2026-20000865/matches/bos-vs-det-4250614/squad"
+            }
+        },
+        {
+            "event_category": "Badminton",
+            "match_id": 20009763,
+            "title": "Round Of 16 (Bwf Super 500 Li Ning Hong Kong Open 2026)",
+            "match_name": "Round Of 16",
+            "event_name": "Bwf Super 500 Li Ning Hong Kong Open 2026",
+            "src": "https://images.fancode.com/skillup-uploads/cms-media/AFG-vs-ZIM.png",
+            "team_1": "Round Of 16",
+            "team_2": "",
+            "status": "LIVE",
+            "match_status_text": "",
+            "startTime": "07:32:21 PM 16-11-2026",
+            "live_scorecard": [],
+            "match_info": {
+                "toss": "",
+                "venue": "",
+                "time_and_venue": ""
+            },
+            "links": {
+                "match_url": "https://www.fancode.com/badminton/tour/bwf-super-500-li-ning-hong-kong-open-2026-20009763/matches/round-of-16-4250634/live-match-info",
+                "full_scorecard": "https://www.fancode.com/badminton/tour/bwf-super-500-li-ning-hong-kong-open-2026-20009763/matches/round-of-16-4250634/scorecard",
+                "live_commentary": "https://www.fancode.com/badminton/tour/bwf-super-500-li-ning-hong-kong-open-2026-20009763/matches/round-of-16-4250634/commentary",
+                "squad": "https://www.fancode.com/badminton/tour/bwf-super-500-li-ning-hong-kong-open-2026-20009763/matches/round-of-16-4250634/squad"
             }
         }
     ]
