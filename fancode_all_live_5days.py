@@ -29,22 +29,49 @@ def extract_real_match_id(url: str) -> int:
     m2 = re.search(r'-(\d{5,8})(?:/|$)', str(url))
     return int(m2.group(1)) if m2 else 0
 
-def parse_fancode_human_date(raw_str: str, ist_zone):
-    """
-    Converts '16 Nov, 2026, 10:30 PM @ Omni Barton Creek...' -> datetime object in IST
-    """
-    if not raw_str:
+def parse_any_timestamp_to_ist(raw_val, ist_zone, default_year=2026):
+    if not raw_val:
         return None
-    date_part = raw_str.split("@")[0].strip()
-    # Pattern: 16 Nov, 2026, 10:30 PM
-    m = re.search(r'(\d{1,2}\s+[A-Za-z]{3},\s+\d{4}),?\s+(\d{1,2}:\d{2}\s*[AP]M)', date_part, re.I)
-    if m:
-        clean_dt_str = f"{m.group(1)} {m.group(2).upper()}"
+
+    # 1. Epoch ms / sec
+    if isinstance(raw_val, (int, float)) or (isinstance(raw_val, str) and raw_val.strip().isdigit()):
+        num = float(raw_val)
+        if num > 1e11:
+            num = num / 1000.0
+        if num > 1e9:
+            return datetime.fromtimestamp(num, tz=timezone.utc).astimezone(ist_zone)
+
+    s = str(raw_val).strip()
+
+    # 2. ISO 8601 UTC string
+    if "T" in s and ("Z" in s or "+" in s or "-" in s[10:]):
         try:
-            dt_naive = datetime.strptime(clean_dt_str, "%d %b, %Y %I:%M %p")
+            return datetime.fromisoformat(s.replace("Z", "+00:00")).astimezone(ist_zone)
+        except Exception:
+            pass
+
+    date_part = s.split("@")[0].strip()
+
+    # 3. With Year: "16 Nov, 2026, 2:30 PM"
+    m_with_year = re.search(r'(\d{1,2}\s+[A-Za-z]{3}),?\s+(\d{4}),?\s+(\d{1,2}:\d{2}\s*[AP]M)', date_part, re.I)
+    if m_with_year:
+        clean_dt_str = f"{m_with_year.group(1)} {m_with_year.group(2)} {m_with_year.group(3).upper()}"
+        try:
+            dt_naive = datetime.strptime(clean_dt_str, "%d %b %Y %I:%M %p")
             return dt_naive.replace(tzinfo=ist_zone)
         except Exception:
             pass
+
+    # 4. Without Year (F1 / MotoGP banner format): "20 Nov, 9:30 AM"
+    m_no_year = re.search(r'(\d{1,2}\s+[A-Za-z]{3}),?\s+(\d{1,2}:\d{2}\s*[AP]M)', date_part, re.I)
+    if m_no_year:
+        clean_dt_str = f"{m_no_year.group(1)} {default_year} {m_no_year.group(2).upper()}"
+        try:
+            dt_naive = datetime.strptime(clean_dt_str, "%d %b %Y %I:%M %p")
+            return dt_naive.replace(tzinfo=ist_zone)
+        except Exception:
+            pass
+
     return None
 
 async def collect_schedule_links(page, sport_name: str, schedule_url: str):
@@ -66,7 +93,6 @@ async def collect_schedule_links(page, sport_name: str, schedule_url: str):
         let sportSlug = args.sportSlug;
         let sportName = args.sportName;
 
-        // 1. Direct DOM links
         document.querySelectorAll('a[href*="/tour/"][href*="/matches/"]').forEach(a => {
             let href = a.href ? a.href.split('?')[0] : '';
             if (!href) return;
@@ -75,7 +101,6 @@ async def collect_schedule_links(page, sport_name: str, schedule_url: str):
             let text = (card.innerText || '').toUpperCase();
             if (text.includes('COMPLETED') || text.includes('BEAT ') || text.includes('WON BY') || text.includes('HIGHLIGHTS')) return;
 
-            // "WATCH LIVE IN" upcoming hota hai, sirf exact "WATCH LIVE" live hota hai
             let isLive = text.includes('WATCH LIVE') && !text.includes('WATCH LIVE IN') && !text.includes('WATCH LIVE AT');
 
             let baseUrl = href.replace(/\/(live-match-info|scorecard|commentary|squad|stats)\/?$/, '');
@@ -86,12 +111,12 @@ async def collect_schedule_links(page, sport_name: str, schedule_url: str):
                     sport_name: sportName,
                     match_url: fullUrl,
                     base_url: baseUrl,
-                    is_live_hint: isLive
+                    is_live_hint: isLive,
+                    raw_start: ''
                 });
             }
         });
 
-        // 2. Embedded __NEXT_DATA__ & Apollo State Scan
         try {
             let scan = (node) => {
                 if (!node || typeof node !== 'object') return;
@@ -136,7 +161,7 @@ async def collect_schedule_links(page, sport_name: str, schedule_url: str):
                                 match_url: fullUrl,
                                 base_url: baseUrl,
                                 is_live_hint: status === 'LIVE' || status === 'IN_PROGRESS',
-                                iso_start: typeof node.startTime === 'string' ? node.startTime : ''
+                                raw_start: node.startTime || node.startTimestamp || ''
                             });
                         }
                     }
@@ -170,7 +195,6 @@ async def scrape_event_detail(page, link_info: dict, ist_zone, now_ist, cutoff_t
     await page.goto(match_url, wait_until="domcontentloaded", timeout=30000)
     await asyncio.sleep(1.5)
 
-    # Neeche scroll karo taaki "MATCH TIME AND VENUE" aur "TOSS" render ho jaye
     await page.evaluate("window.scrollBy(0, 600);")
     await asyncio.sleep(1.0)
 
@@ -191,7 +215,9 @@ async def scrape_event_detail(page, link_info: dict, ist_zone, now_ist, cutoff_t
             toss: '',
             venue: '',
             time_venue_raw: '',
-            iso_start: '',
+            event_starts_on: '',
+            state_start: '',
+            state_status: '',
             countdown_sec: 0,
             is_live: false,
             is_completed: false,
@@ -208,7 +234,7 @@ async def scrape_event_detail(page, link_info: dict, ist_zone, now_ist, cutoff_t
                     info.poster = s;
                     break;
                 }
-                if (!fallbackBanner && (s.includes('_fc-Web') || s.includes('_fc-web') || s.includes('WebTVBG') || img.width > 250)) {
+                if (!fallbackBanner && (s.includes('_fc-Web') || s.includes('_fc-web') || s.includes('WebTVBG') || s.includes('WEBTVBG') || s.includes('Round-') || img.width > 250)) {
                     fallbackBanner = s;
                 }
             }
@@ -235,9 +261,10 @@ async def scrape_event_detail(page, link_info: dict, ist_zone, now_ist, cutoff_t
         for (let i = 0; i < lines.length; i++) {
             let line = lines[i];
 
-            // Exact "Watch Live" (not "WATCH LIVE IN")
-            if ((line === 'Watch Live' || line === 'WATCH LIVE') && info.countdown_sec === 0) {
-                info.is_live = true;
+            // F1 / MotoGP Banner: "EVENT STARTS ON" -> next line "20 Nov, 9:30 AM"
+            if (line.toUpperCase() === 'EVENT STARTS ON' && lines[i + 1]) {
+                info.event_starts_on = lines[i + 1];
+                info.is_live = false;
             }
             if ((line === 'vs' || line === 'VS') && i > 0 && i + 1 < lines.length) {
                 info.team_1 = lines[i - 1];
@@ -250,7 +277,6 @@ async def scrape_event_detail(page, link_info: dict, ist_zone, now_ist, cutoff_t
                 info.toss = lines[i + 1];
             }
             if (line === 'MATCH TIME AND VENUE' && lines[i + 1]) {
-                // Kabhi-kabhi venue next 2 lines mein wrap hota hai
                 let combinedVenue = lines[i + 1];
                 if (lines[i + 2] && !['OFFICIALS', 'TOSS', 'SQUAD', 'MORE LIVE ACTION'].includes(lines[i + 2].toUpperCase())) {
                     combinedVenue += ' ' + lines[i + 2];
@@ -259,6 +285,10 @@ async def scrape_event_detail(page, link_info: dict, ist_zone, now_ist, cutoff_t
                 if (combinedVenue.includes('@')) {
                     info.venue = combinedVenue.split('@')[1].trim();
                 }
+            }
+            // Circuit / Track venue for F1 / MotoGP (e.g., "Las Vegas Strip Circuit")
+            if (!info.venue && (line.includes('Circuit') || line.includes('International Speedway') || line.includes('Autodromo') || line.includes('Track'))) {
+                info.venue = line;
             }
             if (line.includes('trail by') || line.includes('lead by') || line.includes('need ')) {
                 info.status_text = line;
@@ -273,19 +303,28 @@ async def scrape_event_detail(page, link_info: dict, ist_zone, now_ist, cutoff_t
             }
         }
 
+        // Check Watch Live only if neither countdown nor "EVENT STARTS ON" is present
+        if (info.countdown_sec === 0 && !info.event_starts_on && (upperBody.includes('WATCH LIVE') || upperBody.includes('LIVE COMMENTARY'))) {
+            info.is_live = true;
+        }
+
         // 3. Next.js State Backup
         try {
             let scan = (node) => {
                 if (!node || typeof node !== 'object') return;
-                if (Array.isArray(node.teams) && node.teams.length >= 2) {
-                    if (typeof node.teams[0].name === 'string') info.team_1 = node.teams[0].name;
-                    if (typeof node.teams[1].name === 'string') info.team_2 = node.teams[1].name;
+                let nodeMid = String(node.matchId || node.id || '');
+                if (!midStr || nodeMid === midStr) {
+                    if (Array.isArray(node.teams) && node.teams.length >= 2) {
+                        if (typeof node.teams[0].name === 'string') info.team_1 = node.teams[0].name;
+                        if (typeof node.teams[1].name === 'string') info.team_2 = node.teams[1].name;
+                    }
+                    if (typeof node.name === 'string' && node.name && nodeMid) {
+                        info.session_name = node.name;
+                    }
+                    if (typeof node.tourName === 'string' && node.tourName) info.event_name = node.tourName;
+                    if (node.startTime) info.state_start = node.startTime;
+                    if (typeof node.status === 'string') info.state_status = node.status;
                 }
-                if (typeof node.name === 'string' && node.name && (node.matchId || node.id)) {
-                    info.session_name = node.name;
-                }
-                if (typeof node.tourName === 'string' && node.tourName) info.event_name = node.tourName;
-                if (typeof node.startTime === 'string' && node.startTime) info.iso_start = node.startTime;
                 if (typeof node.src === 'string' && node.src.includes('cms-media') && midStr && node.src.includes(midStr)) {
                     info.poster = node.src.split('?')[0];
                 }
@@ -300,7 +339,6 @@ async def scrape_event_detail(page, link_info: dict, ist_zone, now_ist, cutoff_t
     if detail.get("is_completed"):
         return None
 
-    # Event / Tournament Name
     event_name = str(detail.get("event_name") or "").strip()
     if not event_name and "/tour/" in base_url:
         tour_slug = base_url.split("/tour/")[1].split("/")[0]
@@ -308,7 +346,6 @@ async def scrape_event_detail(page, link_info: dict, ist_zone, now_ist, cutoff_t
     if not event_name:
         event_name = f"{sport_name} Series, 2026"
 
-    # Teams ya Non-Team Session
     t1 = str(detail.get("team_1") or "").strip()
     t2 = str(detail.get("team_2") or "").strip()
 
@@ -324,27 +361,32 @@ async def scrape_event_detail(page, link_info: dict, ist_zone, now_ist, cutoff_t
             t1 = session_title
             t2 = event_name
 
-    # Exact StartTime Resolution (Priority: 1. MATCH TIME AND VENUE, 2. ISO startTime, 3. Countdown timer)
-    is_live = bool(detail.get("is_live"))
+    # Exact IST Time & Status Resolution
+    state_st = str(detail.get("state_status") or "").upper()
+    has_countdown = int(detail.get("countdown_sec", 0)) > 0
+    has_future_banner = bool(detail.get("event_starts_on"))
+
+    is_live = bool(
+        detail.get("is_live")
+        or link_info.get("is_live_hint")
+        or state_st in {"LIVE", "IN_PROGRESS", "STARTED"}
+    )
+    if has_countdown or has_future_banner:
+        is_live = False
+
     parsed_dt = None
+    for candidate in [
+        detail.get("state_start"),
+        link_info.get("raw_start"),
+        detail.get("time_venue_raw"),
+        detail.get("event_starts_on"),
+    ]:
+        parsed_dt = parse_any_timestamp_to_ist(candidate, ist_zone, now_ist.year)
+        if parsed_dt:
+            break
 
-    # Priority 1: Visible "16 Nov, 2026, 10:30 PM @ ..."
-    if detail.get("time_venue_raw"):
-        parsed_dt = parse_fancode_human_date(detail["time_venue_raw"], ist_zone)
-
-    # Priority 2: ISO timestamp from state
-    if not parsed_dt:
-        iso_start = str(detail.get("iso_start") or link_info.get("iso_start") or "").strip()
-        if iso_start:
-            try:
-                parsed_dt = datetime.fromisoformat(iso_start.replace("Z", "+00:00")).astimezone(ist_zone)
-            except Exception:
-                pass
-
-    # Priority 3: Countdown timer ("02h : 28m : 53s")
-    if not parsed_dt and detail.get("countdown_sec", 0) > 0:
+    if not parsed_dt and has_countdown:
         parsed_dt = now_ist + timedelta(seconds=int(detail["countdown_sec"]))
-        # Nearest 5-minute mark par round karna (e.g. 10:29:54 -> 10:30:00)
         rem = parsed_dt.minute % 5
         if rem >= 3:
             parsed_dt = (parsed_dt + timedelta(minutes=(5 - rem))).replace(second=0)
@@ -352,13 +394,20 @@ async def scrape_event_detail(page, link_info: dict, ist_zone, now_ist, cutoff_t
             parsed_dt = (parsed_dt - timedelta(minutes=rem)).replace(second=0)
 
     if parsed_dt:
-        if not is_live and parsed_dt < (now_ist - timedelta(hours=6)):
+        if not has_countdown and not has_future_banner and parsed_dt <= now_ist:
+            is_live = True
+        elif parsed_dt > now_ist:
+            is_live = False
+
+        if not is_live and parsed_dt < (now_ist - timedelta(hours=12)):
             return None
         if parsed_dt > cutoff_time:
             return None
-        if parsed_dt > now_ist:
-            is_live = False
+
         formatted_start = parsed_dt.strftime("%I:%M:%S %p %d-%m-%Y")
+        if not detail.get("time_venue_raw"):
+            v_suffix = f" @ {detail['venue']}" if detail.get("venue") else ""
+            detail["time_venue_raw"] = parsed_dt.strftime("%d %b, %Y, %I:%M %p") + v_suffix
     else:
         formatted_start = now_ist.strftime("%I:%M:%S %p %d-%m-%Y")
 
@@ -410,7 +459,7 @@ async def main():
         "matches": []
     }
 
-    user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"
+      user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"
 
     async with async_playwright() as p:
         browser = await p.chromium.launch(
@@ -421,8 +470,19 @@ async def main():
             user_agent=user_agent,
             viewport={"width": 1440, "height": 900},
             locale="en-IN",
-            timezone_id="Asia/Kolkata"
+            timezone_id="Asia/Kolkata",
+            geolocation={"latitude": 28.6139, "longitude": 77.2090},
+            permissions=["geolocation"]
         )
+        await context.add_init_script("""
+            const origResolvedOptions = Intl.DateTimeFormat.prototype.resolvedOptions;
+            Intl.DateTimeFormat.prototype.resolvedOptions = function() {
+                const res = origResolvedOptions.apply(this, arguments);
+                res.timeZone = 'Asia/Kolkata';
+                return res;
+            };
+        """)
+
         page = await context.new_page()
         await page.route("**/*.{woff,woff2,css}", lambda route: route.abort())
 
@@ -471,4 +531,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-    
