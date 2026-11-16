@@ -1,0 +1,91 @@
+{
+    "name": "Fancode Live & 5-Days Schedule Data",
+    "telegram": "https://t.me/+rQTz5VL8CRpjNTZl",
+    "last update time": "07:17:09 PM 16-11-2026",
+    "matches": [
+        {
+            "event_category": "Cricket",
+            "match_id": 20012110,
+            "title": "South Africa vs Bangladesh (Bangladesh Tour Of South Africa 2026)",
+            "match_name": "South Africa vs Bangladesh",
+            "event_name": "Bangladesh Tour Of South Africa 2026",
+            "src": "https://images.fancode.com/skillup-uploads/cms-media/AFG-vs-ZIM.png",
+            "team_1": "South Africa",
+            "team_2": "Bangladesh",
+            "status": "LIVE",
+            "match_status_text": "Day 2: South Africa trail by 218",
+            "startTime": "07:17:09 PM 16-11-2026",
+            "live_scorecard": [
+                {
+                    "team": "BAN",
+                    "score": "400/10"
+                },
+                {
+                    "team": "SA",
+                    "score": "182/1"
+                }
+            ],
+            "match_info": {
+                "toss": "",
+                "venue": "",
+                "time_and_venue": ""
+            },
+            "links": {
+                "match_url": "https://www.fancode.com/south-africa-vs-bangladesh/tour/bangladesh-tour-of-south-africa-2026-20012110/matches/south-africa-vs-bangladesh-4250650/live-match-info",
+                "full_scorecard": "https://www.fancode.com/south-africa-vs-bangladesh/tour/bangladesh-tour-of-south-africa-2026-20012110/matches/south-africa-vs-bangladesh-4250650/scorecard",
+                "live_commentary": "https://www.fancode.com/south-africa-vs-bangladesh/tour/bangladesh-tour-of-south-africa-2026-20012110/matches/south-africa-vs-bangladesh-4250650/commentary",
+                "squad": "https://www.fancode.com/south-africa-vs-bangladesh/tour/bangladesh-tour-of-south-africa-2026-20012110/matches/south-africa-vs-bangladesh-4250650/squad"
+            }
+        },
+        {
+            "event_category": "Cricket",
+            "match_id": 20034134,
+            "title": "South Asia vs Europe (Test Twenty Championship 2026)",
+            "match_name": "South Asia vs Europe",
+            "event_name": "Test Twenty Championship 2026",
+            "src": "https://images.fancode.com/skillup-uploads/cms-media/AFG-vs-ZIM.png",
+            "team_1": "South Asia",
+            "team_2": "Europe",
+            "status": "LIVE",
+            "match_status_text": "",
+            "startTime": "07:17:09 PM 16-11-2026",
+            "live_scorecard": [],
+            "match_info": {
+                "toss": "",
+                "venue": "",
+                "time_and_venue": ""
+            },
+            "links": {
+                "match_url": "https://www.fancode.com/south-asia-vs-europe/tour/test-twenty-championship-2026-20034134/matches/south-asia-vs-europe-4250950/live-match-info",
+                "full_scorecard": "https://www.fancode.com/south-asia-vs-europe/tour/test-twenty-championship-2026-20034134/matches/south-asia-vs-europe-4250950/scorecard",
+                "live_commentary": "https://www.fancode.com/south-asia-vs-europe/tour/test-twenty-championship-2026-20034134/matches/south-asia-vs-europe-4250950/commentary",
+                "squad": "https://www.fancode.com/south-asia-vs-europe/tour/test-twenty-championship-2026-20034134/matches/south-asia-vs-europe-4250950/squad"
+            }
+        },
+        {
+            "event_category": "Cricket",
+            "match_id": 20013991,
+            "title": "Alcaraz vs Tiafoe (Nitto Atp Finals 2026)",
+            "match_name": "Alcaraz vs Tiafoe",
+            "event_name": "Nitto Atp Finals 2026",
+            "src": "https://images.fancode.com/skillup-uploads/cms-media/AFG-vs-ZIM.png",
+            "team_1": "Alcaraz",
+            "team_2": "Tiafoe",
+            "status": "LIVE",
+            "match_status_text": "",
+            "startTime": "07:17:09 PM 16-11-2026",
+            "live_scorecard": [],
+            "match_info": {
+                "toss": "",
+                "venue": "",
+                "time_and_venue": ""
+            },
+            "links": {
+                "match_url": "https://www.fancode.com/alcaraz-vs-tiafoe/tour/nitto-atp-finals-2026-20013991/matches/alcaraz-vs-tiafoe-4250726/live-match-info",
+                "full_scorecard": "https://www.fancode.com/alcaraz-vs-tiafoe/tour/nitto-atp-finals-2026-20013991/matches/alcaraz-vs-tiafoe-4250726/scorecard",
+                "live_commentary": "https://www.fancode.com/alcaraz-vs-tiafoe/tour/nitto-atp-finals-2026-20013991/matches/alcaraz-vs-tiafoe-4250726/commentary",
+                "squad": "https://www.fancode.com/alcaraz-vs-tiafoe/tour/nitto-atp-finals-2026-20013991/matches/alcaraz-vs-tiafoe-4250726/squad"
+            }
+        }
+    ]
+}
