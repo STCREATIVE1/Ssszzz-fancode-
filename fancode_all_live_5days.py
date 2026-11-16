@@ -33,7 +33,7 @@ async def extract_from_page(page, url: str, default_status: str):
         await page.evaluate("window.scrollBy(0, 1000);")
         await asyncio.sleep(0.8)
 
-    return await page.evaluate("""(defStatus) => {
+    return await page.evaluate(r"""(defStatus) => {
         let extracted = [];
 
         // 1. Embedded Next.js / Apollo State Scan
@@ -65,15 +65,16 @@ async def extract_from_page(page, url: str, default_status: str):
             if (window.__INIT_STATE__) scan(window.__INIT_STATE__);
         } catch(e) {}
 
-        // 2. DOM Match Cards + Direct Match Links Scan
+        // 2. DOM Match Cards + Direct Match Links Scan (Fixed RegExp)
+        let idRegex = new RegExp('[-/](\\d{6,8})(?:/|$)');
         let links = document.querySelectorAll('a[href*="/matches/"]');
         links.forEach(a => {
             let href = a.href ? a.href.split('?')[0] : '';
-            let idM = href.match(/[-/](\\d{6,8})(?:/|$)/);
+            let idM = href.match(idRegex);
             if (!idM) return;
 
             let card = a.closest('div[role="article"], li, div') || a;
-            let text = card.innerText ? card.innerText.replace(/\\n+/g, ' | ').trim() : '';
+            let text = card.innerText ? card.innerText.replace(/\n+/g, ' | ').trim() : '';
             let img = card.querySelector('img:not([src*="flags"])');
             let src = img ? (img.src || img.getAttribute('data-src') || '') : '';
 
@@ -122,9 +123,7 @@ async def scrape_fancode_live_and_schedule():
         await page.route("**/*.{woff,woff2,css}", lambda route: route.abort())
 
         try:
-            # Step 1: Pehle All-Sports LIVE page scrape karega
             live_raw = await extract_from_page(page, live_url, "LIVE")
-            # Step 2: Phir 5-Days Cricket Schedule scrape karega
             upcoming_raw = await extract_from_page(page, schedule_url, "UPCOMING")
 
             combined_raw = live_raw + upcoming_raw
@@ -142,7 +141,6 @@ async def scrape_fancode_live_and_schedule():
                 if raw_href and not raw_href.startswith("http"):
                     raw_href = f"https://www.fancode.com{raw_href}"
 
-                # Agar same match_id pehle aa chuka hai aur naye item mein proper URL ya poster hai toh update karo
                 if mid_int in seen_ids:
                     existing = seen_ids[mid_int]
                     if raw_href and "/matches/" in raw_href and not existing["match_url"]:
@@ -197,7 +195,6 @@ async def scrape_fancode_live_and_schedule():
                 if not poster or "flags" in poster:
                     poster = f"https://www.fancode.com/skillup-uploads/cms-media/{mid_int}_fc-Web.jpg"
 
-                # Clean Match & Scorecard Links
                 match_page_url = ""
                 scorecard_page_url = ""
                 if raw_href and "/matches/" in raw_href:
@@ -238,3 +235,4 @@ async def scrape_fancode_live_and_schedule():
 
 if __name__ == "__main__":
     asyncio.run(scrape_fancode_live_and_schedule())
+                    
